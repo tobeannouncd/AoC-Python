@@ -1,11 +1,16 @@
-import aocd
-
-nums = aocd.numbers
+from utils import *
 
 
-def solve(nums, size):
-    return sum(1 for a, b in zip(nums, nums[size:]) if a < b)
+def solve(data: str) -> None:
+    nums = to_ints(data)
+    print(sum(1 for a, b in zip(nums, nums[1:]) if a < b))
+    print(sum(1 for a, b in zip(nums, nums[3:]) if a < b))
 
 
-print(solve(nums, 1))
-print(solve(nums, 3))
+def main():
+    from aocd import data
+    solve(data)
+
+
+if __name__ == '__main__':
+    main()
