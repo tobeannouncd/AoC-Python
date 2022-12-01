@@ -1,114 +1,66 @@
-from collections import deque
-from heapq import heappop, heappush
+from math import gcd
 from numbers import Real
 import re
-from typing import Callable, Hashable, Iterable, Iterator, Literal, Mapping, Optional, Protocol, TypeVar, NamedTuple, Self
-
-__all__ = [
-    'Point', 'grid_string', 'bfs', 'dijkstra', 'to_ints', 'to_grid', 'adjacent'
-]
+from typing import Callable, Iterator, Mapping, NamedTuple, TypeVar
 
 
 class Point(NamedTuple):
     x: int
     y: int
 
-    def __add__(self, __o: Self) -> Self:
-        return type(self)(self.x + __o.x, self.y + __o.y)
+    def __add__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return type(self)(*(s + o for s, o in zip(self, other)))
 
-    def __sub__(self, __o: Self) -> Self:
-        return type(self)(self.x - __o.x, self.y - __o.y)
+    def __sub__(self, other):
+        if not isinstance(other, Point):
+            return NotImplemented
+        return type(self)(*(s - o for s, o in zip(self, other)))
 
-    def __abs__(self) -> int:
+    def __abs__(self):
         return abs(self.x) + abs(self.y)
 
-    def cw(self) -> Self:
+    def __mul__(self, other):
+        if not isinstance(other, int):
+            return NotImplemented
+        return type(self)(self.x * other, self.y * other)
+
+    def __floordiv__(self, other):
+        if not isinstance(other, Real):
+            return NotImplemented
+        return type(self)(self.x // other, self.y // other)
+
+    def __pos__(self):
+        return self
+
+    def __neg__(self):
+        return type(self)(-self.x, -self.y)
+
+    def cw(self):
         return type(self)(-self.y, self.x)
 
-    def ccw(self) -> Self:
+    def ccw(self):
         return type(self)(self.y, -self.x)
 
+    def unit(self):
+        g = gcd(self.x, self.y)
+        return type(self)(self.x // g, self.y // g)
 
-P = TypeVar('P', tuple[int, int], Point)
-
-
-def grid_string(grid: Mapping[P, str], default: str = ' ') -> str:
-    xs, ys = map(sorted, zip(*grid))
-    rows = []
-    grid_ = {(x, y): v for (x, y), v in grid.items()}
-    for y in range(ys[0], ys[-1] + 1):
-        row = ''
-        for x in range(xs[0], xs[-1] + 1):
-            row += grid_.get((x, y), default)
-        rows.append(row)
-    return '\n'.join(rows)
+    def adjacent(self, eight=False):
+        for dy in range(-1, 2):
+            for dx in range(-1, 2):
+                if dx == dy == 0:
+                    continue
+                if eight or 0 in (dx, dy):
+                    yield type(self)(self.x + dx, self.y + dy)
 
 
-S = TypeVar('S', bound=Hashable)
+GridVal = TypeVar('GridVal')
 
 
-def bfs(start: S, successors: Callable[[S], Iterable[S]],
-        stop: Callable[[S], bool]):
-    queue = deque([start])
-    prev: dict[S, Optional[S]] = {start: None}
-    dist = {start: 0}
-    while queue:
-        pos = queue.popleft()
-        if stop(pos):
-            break
-        for p in successors(pos):
-            if p not in prev:
-                prev[p] = pos
-                dist[p] = dist[pos] + 1
-                queue.append(p)
-    return prev, dist
-
-
-H = TypeVar('H', bound='_Heapable')
-
-
-class _Heapable(Protocol):
-
-    def __hash__(self) -> int:
-        ...
-
-    def __eq__(self: H, __o: H) -> bool:
-        ...
-
-    def __lt__(self: H, __o: H) -> bool:
-        ...
-
-
-def dijkstra(start: H, successors: Callable[[H], Iterable[tuple[Real, H]]],
-             stop: Callable[[H], bool]):
-    pq = [(0, start)]
-    prev: dict[H, Optional[H]] = {start: None}
-    dist: dict[H, Real | Literal[0]] = {start: 0}
-    visited = set()
-    while pq:
-        d, pos = heappop(pq)
-        if pos in visited:
-            continue
-        visited.add(pos)
-        if stop(pos):
-            break
-        for cost, p in successors(pos):
-            d_ = d + cost
-            if d_ < dist.get(p, float('inf')):
-                prev[p] = pos
-                dist[p] = d_
-                heappush(pq, (d_, p))
-    return prev, dist
-
-
-def to_ints(s: str) -> list[int]:
-    return list(map(int, re.findall(r'-?\d+', s)))
-
-
-O = TypeVar('O')
-
-
-def to_grid(data: str, f: Callable[[str], O] = str) -> dict[Point, O]:
+def to_grid(data: str,
+            f: Callable[[str], GridVal] = str) -> dict[Point, GridVal]:
     grid = {}
     for y, row in enumerate(data.splitlines()):
         for x, val in enumerate(row):
@@ -116,12 +68,23 @@ def to_grid(data: str, f: Callable[[str], O] = str) -> dict[Point, O]:
     return grid
 
 
-def adjacent(p: Point, n: Literal[4, 8] = 4) -> Iterator[Point]:
-    orth = Point(0, 1)
-    diag = Point(1, 1)
-    for _ in range(4):
-        yield p + orth
-        if n == 8:
-            yield p + diag
-        orth = orth.ccw()
-        diag = diag.ccw()
+def grid_string(grid: Mapping[tuple[int, int], GridVal],
+                f: Callable[[GridVal], str] = str,
+                default=' ') -> str:
+    xs, ys = map(sorted, zip(*grid))
+    rows = []
+    for y in range(ys[0], ys[-1] + 1):
+        row = ''
+        for x in range(xs[0], xs[-1] + 1):
+            if (x, y) in grid:
+                row += f(grid[x, y])
+            else:
+                row += default
+        rows.append(row)
+    return '\n'.join(rows)
+
+def to_ints(data: str):
+    return list(map(int, re.findall(r'-?\d+', data)))
+
+def split_paragraphs(data: str):
+    return data.split('\n\n')
