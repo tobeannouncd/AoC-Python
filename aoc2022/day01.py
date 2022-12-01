@@ -3,16 +3,13 @@ from utils import split_paragraphs, to_ints
 
 def solve(data: str) -> None:
     elves = list(map(to_ints, split_paragraphs(data)))
-    weight = sorted(map(sum, elves))
-    print(weight[-1])
+    total_weight = sorted(map(sum, elves))
+    print(total_weight[-1])
 
-    print(sum(weight[-3:]))
+    print(sum(total_weight[-3:]))
 
 
-def main():
+if __name__ == "__main__":
     from aocd import data
+
     solve(data)
-
-
-if __name__ == '__main__':
-    main()

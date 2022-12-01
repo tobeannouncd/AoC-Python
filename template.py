@@ -2,10 +2,7 @@ def solve(data: str) -> None:
     ...
 
 
-def main():
+if __name__ == "__main__":
     from aocd import data
+
     solve(data)
-
-
-if __name__ == '__main__':
-    main()
