@@ -1,14 +1,15 @@
-from aocd import data
-from intcode import *
+from aoc2019.intcode import VM
 
 
-def run(val: int):
-    pc = Intcode(data)
-    pc.write(val)
-    out = pc.read()
-    assert len(out) == 1
-    print(out[0])
+def solve(data: str) -> None:
+    for inp in 1, 2:
+        *errors, code = VM(data, inp)
+        if errors or code is None:
+            raise RuntimeError(f"{(*errors, code)=}")
+        print(code)
 
 
-run(1)
-run(2)
+if __name__ == "__main__":
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

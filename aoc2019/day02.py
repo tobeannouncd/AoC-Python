@@ -1,22 +1,24 @@
 from itertools import product
-
-from aocd import data
-
-from intcode import *
+from aoc2019.intcode import VM
 
 
+def solve(data: str):
+    print(alarm(data, 12, 2))
+    
+    n, v = next((n,v) for n,v in product(range(100), repeat=2) if alarm(data, n, v) == 19690720)
+    print(100*n + v)
+    
 
-def alarm(noun, verb):
-    pc = Intcode(data)
-    pc[1] = noun
-    pc[2] = verb
-    pc.run()
-    return pc[0]
+def alarm(data: str, noun: int, verb: int) -> int:
+    pc = VM(data)
+    pc.memory[1] = noun
+    pc.memory[2] = verb
+    next(pc, None)
+    return pc.memory[0]
 
 
-print(alarm(12, 2))
 
-for noun, verb in product(range(100), repeat=2):
-    if alarm(noun, verb) == 19690720:
-        print(100 * noun + verb)
-        break
+if __name__ == '__main__':
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

@@ -130,3 +130,6 @@ dmypy.json
 
 # Visual Studio Code workspace settings
 .vscode
+
+# Project Specific
+test/

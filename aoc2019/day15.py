@@ -1,61 +1,61 @@
+from collections import deque
 from copy import deepcopy
-from typing import Iterable
-from aocd import data
-from intcode import *
-from utils import *
-
-directions = {
-    1: Point(0, -1),
-    2: Point(0, 1),
-    3: Point(-1, 0),
-    4: Point(1, 0),
-}
-
-WALL = 0
-MOVED = 1
-OXYGEN = 2
+from aoc2019.intcode import VM
+from lattice import Point
 
 
-class Droid(Intcode):
-
-    def __init__(self, data: str) -> None:
-        super().__init__(data)
-        self.pos = Point(0, 0)
-
-    def go(self, d):
-        self.write(d)
-        status, = self.read(1)
-        if status != WALL:
-            self.pos += directions[d]
-        return status
+COMMANDS = dict(zip((3, 1, 2, 4), Point(0, 0).adjacent()))
+START = Point(0, 0)
 
 
-MAP = {}
-DROIDS = {Point(0, 0): Droid(data)}
+def solve(data: str):
+    ship_map = make_map(data)
+    oxygen = next(pt for pt, val in ship_map.items() if val == 2)
+
+    dist = flood(ship_map, START, oxygen)
+    print(dist[oxygen])
+
+    dist = flood(ship_map, oxygen)
+    print(max(dist.values()))
 
 
-def successors(p: Point) -> Iterable[Point]:
-    d = DROIDS[p]
-    for k, v in directions.items():
-        p_ = p + v
-        if p_ not in MAP:
-            d_ = deepcopy(d)
-            s = d_.go(k)
-            MAP[p_] = s
-            if s != WALL:
-                DROIDS[p_] = d_
-                yield p_
+def make_map(data: str) -> dict[Point, int]:
+    grid = {}
+    todo = [(START, VM(data))]
+    while todo:
+        pos, droid = todo.pop()
+        for n, offset in COMMANDS.items():
+            pos_ = pos + offset
+            if pos_ in grid:
+                continue
+            droid_ = deepcopy(droid)
+            droid_.send(n)
+            if (status := next(droid_)) is None:
+                raise RuntimeError
+            grid[pos_] = status
+            if status:
+                todo.append((pos_, droid_))
+    return grid
 
 
-prev, _ = bfs(Point(0, 0), successors, lambda p: MAP.get(p) == OXYGEN)
-path = [next(k for k, v in MAP.items() if v == OXYGEN)]
-while True:
-    x = prev[path[-1]]
-    if x is None:
-        break
-    path.append(x)
-print(len(path) - 1)
+def flood(
+    ship_map: dict[Point, int], start: Point, end: Point | None = None
+) -> dict[Point, int]:
+    dist = {start: 0}
+    todo = deque([start])
+    while todo:
+        pos = todo.popleft()
+        if pos == end:
+            break
+        for a in pos.adjacent():
+            if ship_map.get(a) and a not in dist:
+                dist[a] = dist[pos] + 1
+                todo.append(a)
+    return dist
 
-MAP.clear()
-_, dist = bfs(path[0], successors, lambda _: False)
-print(max(dist.values()))
+
+if __name__ == "__main__":
+    from aocd import data
+
+    assert isinstance(data, str)
+    solve(data)

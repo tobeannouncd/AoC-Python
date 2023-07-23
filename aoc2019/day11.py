@@ -1,38 +1,30 @@
-from aocd import data
-from intcode import *
-from utils import *
-
-BLACK = 0
-WHITE = 1
-
-LEFT = 0
-RIGHT = 1
+from aoc2019.intcode import VM
+from lattice import Point, to_str
 
 
-def run(grid, starting_color=BLACK):
-    robot = Intcode(data)
-    pos = Point(0, 0)
-    grid[pos] = starting_color
-    facing = Point(0, -1)
-    while True:
-        robot.write(grid.get(pos, BLACK))
-        out = robot.read(2)
-        if len(out) != 2:
-            break
-        color, direction = out
-        grid[pos] = color
-        if direction == LEFT:
-            facing = facing.ccw()
+def solve(data: str) -> None:
+    for part in 1, 2:
+        hull = {}
+        pos = Point(0, 0)
+        facing = Point(0, -1)
+        if part == 2:
+            hull[pos] = 1
+        robot = VM(data)
+        for _ in robot:
+            robot.send(hull.get(pos, 0))
+            hull[pos] = next(robot)
+            if next(robot):
+                facing = facing.rot_cw()
+            else:
+                facing = facing.rot_ccw()
+            pos += facing
+        if part == 1:
+            print(len(hull))
         else:
-            facing = facing.cw()
-        pos += facing
+            print(to_str(pt for pt, val in hull.items() if val == 1))
 
 
-grid = {}
-run(grid)
-print(len(grid))
-
-grid.clear()
-run(grid, WHITE)
-g = {p: '#' for p, v in grid.items() if v == WHITE}
-print(grid_string(g))
+if __name__ == "__main__":
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

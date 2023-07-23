@@ -3,7 +3,7 @@ from utils import *
 
 
 def solve(data: str) -> None:
-    lanternfish = Counter(to_ints(data))
+    lanternfish = Counter(ints(data))
     simulate(lanternfish, 80)
     print(sum(lanternfish.values()))
     simulate(lanternfish, 256 - 80)

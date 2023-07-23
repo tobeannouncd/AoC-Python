@@ -9,10 +9,10 @@ def is_winner(board: list[list[int]]) -> bool:
 
 def solve(data: str) -> None:
     a, *b = data.split('\n\n')
-    nums = to_ints(a)
+    nums = ints(a)
     boards = []
     for line in b:
-        boards.append([to_ints(row) for row in line.splitlines()])
+        boards.append([ints(row) for row in line.splitlines()])
     winners = set()
     for n in nums:
         for i, board in enumerate(boards):

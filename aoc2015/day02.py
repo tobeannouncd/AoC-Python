@@ -9,7 +9,7 @@ def ribbon(package):
     return 2*(length+width) + length*width*height
 
 def solve(data: str) -> None:
-    packages = [to_ints(line) for line in data.splitlines()]
+    packages = [ints(line) for line in data.splitlines()]
     print(sum(area(package) for package in packages))
     print(sum(ribbon(package) for package in packages))
 

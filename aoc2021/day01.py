@@ -2,7 +2,7 @@ from utils import *
 
 
 def solve(data: str) -> None:
-    nums = to_ints(data)
+    nums = ints(data)
     print(sum(1 for a, b in zip(nums, nums[1:]) if a < b))
     print(sum(1 for a, b in zip(nums, nums[3:]) if a < b))
 

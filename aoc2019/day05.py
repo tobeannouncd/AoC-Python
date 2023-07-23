@@ -1,17 +1,15 @@
-from intcode import Intcode, parse
-from aocd import data
+from aoc2019.intcode import VM
 
 
-def solve(val, part_two=False):
-    pc = Intcode(data)
-    pc.write(val)
-    out = pc.read()
-    if part_two:
-        assert len(out) == 1
-    else:
-        assert all(not x for x in out[:-1])
-    return out[-1]
+
+def solve(data):
+    for inp in 1, 5:
+        *errors, code = VM(data, inp)
+        assert all(not x for x in errors)
+        print(code)
 
 
-print(solve(1))
-print(solve(5, True))
+if __name__ == "__main__":
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

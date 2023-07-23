@@ -1,122 +1,98 @@
 from collections import defaultdict, deque
-from sys import stdin, stdout
-from typing import TextIO
-
-__all__ = ['Intcode', 'HaltProgram', 'NoInput']
+from typing import Iterator, Literal, TextIO, overload
 
 
-def parse(data: str):
-    return list(map(int, data.split(',')))
-
-
-class HaltProgram(Exception):
-    pass
-
-
-class NoInput(Exception):
-    pass
-
-
-class Intcode:
-
-    def __init__(self, data: str) -> None:
-        self._memory = defaultdict(int, enumerate(parse(data)))
-        self._pointer = 0
+class VM:
+    def __init__(self, data: str, *vals: int) -> None:
+        self.memory = defaultdict(int, enumerate(map(int, data.split(","))))
+        self._pc = 0
+        self._input = deque(vals)
         self._relative_base = 0
-        self._input = deque()
 
-    def __getitem__(self, i: int) -> int:
-        return self._memory[i]
+    @overload
+    def _scan(self) -> int:
+        ...
 
-    def __setitem__(self, i: int, val: int):
-        self._memory[i] = val
+    @overload
+    def _scan(self, n: Literal[1], mode: int) -> int:
+        ...
 
-    def _scan(self, n: int = 1, mode: int = 0):
+    @overload
+    def _scan(self, n: Literal[2], mode: int) -> tuple[int, int]:
+        ...
+
+    @overload
+    def _scan(self, n: Literal[3], mode: int) -> tuple[int, int, int]:
+        ...
+
+    def _scan(self, n=1, mode=0):
+        vals = []
         for _ in range(n):
+            val = self._pc
+            self._pc += 1
             mode, m = divmod(mode, 10)
-            val = self._pointer
-            self._pointer += 1
             if m != 1:
-                val = self[val]
+                val = self.memory[val]
             if m == 2:
                 val += self._relative_base
-            yield val
+            vals.append(val)
+        return vals[0] if n == 1 else tuple(vals)
 
-    def _step(self):
-        x, = self._scan()
-        mode, opcode = divmod(x, 100)
-        if opcode == 99:
-            self._pointer -= 1
-            raise HaltProgram
-        elif opcode == 1:
-            a, b, c = self._scan(3, mode)
-            self[c] = self[a] + self[b]
-        elif opcode == 2:
-            a, b, c = self._scan(3, mode)
-            self[c] = self[a] * self[b]
-        elif opcode == 3:
-            if not self._input:
-                self._pointer -= 1
-                raise NoInput
-            a, = self._scan(1, mode)
-            self[a] = self._input.popleft()
-        elif opcode == 4:
-            a, = self._scan(1, mode)
-            return self[a]
-        elif opcode == 5:
-            a, b = self._scan(2, mode)
-            if self[a]:
-                self._pointer = self[b]
-        elif opcode == 6:
-            a, b = self._scan(2, mode)
-            if not self[a]:
-                self._pointer = self[b]
-        elif opcode == 7:
-            a, b, c = self._scan(3, mode)
-            self[c] = int(self[a] < self[b])
-        elif opcode == 8:
-            a, b, c = self._scan(3, mode)
-            self[c] = int(self[a] == self[b])
-        elif opcode == 9:
-            a, = self._scan(1, mode)
-            self._relative_base += self[a]
-        else:
-            raise ValueError(f'invalid opcode: {opcode}')
+    def __iter__(self) -> Iterator[int | None]:
+        return self
 
-    def run(self):
+    def __next__(self) -> int | None:
         while True:
-            try:
-                self._step()
-            except HaltProgram:
-                break
+            mode, op = divmod(self._scan(), 100)
+            if op == 99:
+                self._pc -= 1
+                raise StopIteration
+            elif op == 1:
+                a, b, c = self._scan(3, mode)
+                self.memory[c] = self.memory[a] + self.memory[b]
+            elif op == 2:
+                a, b, c = self._scan(3, mode)
+                self.memory[c] = self.memory[a] * self.memory[b]
+            elif op == 3:
+                if not self._input:
+                    self._pc -= 1
+                    return
+                a = self._scan(1, mode)
+                self.memory[a] = self._input.popleft()
+            elif op == 4:
+                a = self._scan(1, mode)
+                return self.memory[a]
+            elif op == 5:
+                a, b = self._scan(2, mode)
+                if self.memory[a]:
+                    self._pc = self.memory[b]
+            elif op == 6:
+                a, b = self._scan(2, mode)
+                if not self.memory[a]:
+                    self._pc = self.memory[b]
+            elif op == 7:
+                a, b, c = self._scan(3, mode)
+                self.memory[c] = int(self.memory[a] < self.memory[b])
+            elif op == 8:
+                a, b, c = self._scan(3, mode)
+                self.memory[c] = int(self.memory[a] == self.memory[b])
+            elif op == 9:
+                a = self._scan(1, mode)
+                self._relative_base += self.memory[a]
+            else:
+                raise ValueError(f"unknown op: {op}")
 
-    def write(self, val: int):
-        self._input.append(val)
-
-    def read(self, n: int = -1) -> list[int]:
-        out = []
-        while n:
-            try:
-                x = self._step()
-                if x is not None:
-                    out.append(x)
-                    n -= 1
-            except HaltProgram:
-                break
-        return out
+    def send(self, *vals: int) -> None:
+        self._input.extend(vals)
     
-    def ascii(self, inp: TextIO = stdin, out: TextIO = stdout):
-        while True:
-            try:
-                x = self.read(1)
-                if not x:
-                    break
-                val, = x
-                if val in range(128):
-                    out.write(chr(val))
-                else:
-                    return val
-            except NoInput:
-                s = inp.readline().strip() + '\n'
-                for o in map(ord, s):
-                    self.write(o)
+    def ascii(self, inp: TextIO, out: TextIO) -> Iterator[int]:
+        for val in self:
+            if val is None:
+                line = inp.readline()
+                if not line.endswith('\n'):
+                    line += '\n'
+                self.send(*map(ord, line))
+            elif val in range(128):
+                out.write(chr(val))
+            else:
+                yield val

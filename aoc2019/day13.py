@@ -1,40 +1,32 @@
-from aocd import data
-
-from intcode import *
-
-BLOCK = 2
-PADDLE = 3
-BALL = 4
-
-LEFT = -1
-NEUTRAL = 0
-RIGHT = 1
+from aoc2019.intcode import VM
 
 
-def play(freeplay=False):
-    arcade = Intcode(data)
-    if freeplay:
-        arcade[0] = 2
-    screen = {}
-    while True:
-        try:
-            packet = arcade.read(3)
-            if len(packet) != 3:
-                break
-            x, y, tile_id = packet
-            screen[x, y] = tile_id
-        except NoInput:
-            paddle_x = next(x for (x, _), val in screen.items()
-                            if val == PADDLE)
-            ball_x = next(x for (x, _), val in screen.items() if val == BALL)
-            if ball_x < paddle_x:
-                arcade.write(LEFT)
-            elif paddle_x < ball_x:
-                arcade.write(RIGHT)
-            else:
-                arcade.write(NEUTRAL)
-    return screen
+def solve(data: str) -> None:
+    for part in 1, 2:
+        screen = {}
+        game = VM(data)
+        if part == 2:
+            game.memory[0] = 2
+        for x in game:
+            if x is None:
+                paddle = next(x for (x,_), tile in screen.items() if tile == 3)
+                ball = next(x for (x,_), tile in screen.items() if tile == 4)
+                diff = ball - paddle
+                if diff:
+                    diff //= abs(diff)
+                game.send(diff)
+                continue
+            y = next(game)
+            tile = next(game)
+            screen[x,y] = tile
+        if part == 1:
+            print(sum(1 for tile in screen.values() if tile == 2))
+        else:
+            print(screen[-1, 0])
 
 
-print(sum(1 for v in play().values() if v == BLOCK))
-print(play(True)[-1, 0])
+
+if __name__ == "__main__":
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

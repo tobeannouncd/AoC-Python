@@ -1,7 +1,7 @@
+import re
 from math import gcd
 from numbers import Real
-import re
-from typing import Callable, Iterator, Mapping, NamedTuple, TypeVar
+from typing import Callable, Mapping, NamedTuple, TypeVar
 
 
 class Point(NamedTuple):
@@ -83,8 +83,8 @@ def grid_string(grid: Mapping[tuple[int, int], GridVal],
         rows.append(row)
     return '\n'.join(rows)
 
-def to_ints(data: str):
-    return list(map(int, re.findall(r'-?\d+', data)))
+def ints(data: str) -> list[int]:
+    return [int(x) for x in re.findall(r'(?<!\d)-?\d+', data)]
 
-def split_paragraphs(data: str):
+def paragraphs(data: str):
     return data.split('\n\n')

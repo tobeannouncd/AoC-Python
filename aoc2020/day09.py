@@ -1,5 +1,5 @@
 from collections import deque
-from utils import to_ints
+from utils import ints
 
 
 def twosum(nums, target):
@@ -12,7 +12,7 @@ def twosum(nums, target):
 
 
 def solve(data: str) -> None:
-    nums = to_ints(data)
+    nums = ints(data)
     window = deque(nums[:25], maxlen=25)
     target = -1
     for n in nums[25:]:

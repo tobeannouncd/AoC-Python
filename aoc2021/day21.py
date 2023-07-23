@@ -45,7 +45,7 @@ def wins_losses(pos_cur, pos_other, score_cur, score_other):
 
 
 def solve(data: str) -> None:
-    _, a, _, b = to_ints(data)
+    _, a, _, b = ints(data)
     rolls, scores = sim(a, b)
     print(rolls*min(scores))
 

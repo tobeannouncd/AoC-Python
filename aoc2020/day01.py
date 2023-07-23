@@ -1,6 +1,6 @@
 from math import prod
 from typing import Iterable
-from utils import to_ints
+from utils import ints
 
 def two_sum(target: int, nums: Iterable[int]):
     seen = set()
@@ -18,7 +18,7 @@ def three_sum(target: int, nums: Iterable[int]):
         seen.add(n)
 
 def solve(data: str) -> None:
-    nums = to_ints(data)
+    nums = ints(data)
     print(prod(two_sum(2020, nums) or (-1,)))
     print(prod(three_sum(2020, nums) or (-1,)))
 

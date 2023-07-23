@@ -13,7 +13,7 @@ def sign(x):
 def solve(data: str) -> None:
     lines = []
     for line in data.splitlines():
-        x, y, X, Y = to_ints(line)
+        x, y, X, Y = ints(line)
         a = Point(x, y)
         b = Point(X, Y)
         lines.append((a, b))

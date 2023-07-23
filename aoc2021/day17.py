@@ -3,7 +3,7 @@ from utils import *
 
 
 def solve(data: str) -> None:
-    xmin, xmax, ymin, ymax = to_ints(data)
+    xmin, xmax, ymin, ymax = ints(data)
     vx_min = 1
     while vx_min * (vx_min + 1) // 2 < xmin:
         vx_min += 1

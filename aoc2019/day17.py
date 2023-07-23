@@ -1,78 +1,71 @@
 from io import StringIO
-from aocd import data
-from intcode import *
-from utils import *
+from aoc2019.intcode import VM
+from lattice import from_str, Point
 
-robot = Intcode(data)
-o = StringIO()
-robot.ascii(out=o)
-grid = {}
+DIRS = dict(zip("<^v>", Point(0, 0).adjacent()))
+LIMIT = 20
 
-directions = {
-    'v': Point(0, 1),
-    '^': Point(0, -1),
-    '<': Point(-1, 0),
-    '>': Point(1, 0),
-}
-pos, facing = None, None
+def solve(data: str) -> None:
+    robot = VM(data)
+    out = StringIO()
+    next(robot.ascii(StringIO(), out), None)
 
-for y, row in enumerate(o.getvalue().strip().splitlines()):
-    for x, val in enumerate(row):
-        pt = Point(x, y)
-        grid[pt] = val
-        if val in directions:
-            pos, facing = pt, directions[val]
-assert pos is not None and facing is not None
-print(
-    sum(p.x * p.y for p, v in grid.items() if v == '#' and all(
-        grid.get(p + d) == '#' for d in directions.values())))
-
-path = []
-while True:
-    if grid.get(pos + facing.ccw()) == '#':
-        path.append('L')
-        facing = facing.ccw()
-    elif grid.get(pos + facing.cw()) == '#':
-        path.append('R')
-        facing = facing.cw()
-    else:
-        break
-    n = 0
-    while grid.get(pos + facing) == '#':
-        n += 1
-        pos += facing
-    path.append(n)
-path = ','.join(map(str, path))
-
-maxlen = 20
-
-
-def simplify(path: str, char: str) -> str:
-    lst = path.split(',')
-    routines = set()
-    for i in range(0, len(lst)):
-        if lst[i] not in 'LR':
-            continue
-        for j in range(i + 1, len(lst)):
-            if lst[j] in 'LR':
+    scaffold = dict(from_str(out.getvalue()))
+    print(
+        sum(
+            pt.x * pt.y
+            for pt, val in scaffold.items()
+            if val == "#" and all(scaffold.get(a) == "#" for a in pt.adjacent(4))
+        )
+    )
+    
+    pos, facing = next((pt, DIRS[val]) for pt, val in scaffold.items() if val in DIRS)
+    steps = []
+    while True:
+        if scaffold.get(pos + facing.rot_ccw()) == '#':
+            steps.append("L")
+            facing = facing.rot_ccw()
+        elif scaffold.get(pos + facing.rot_cw()) == '#':
+            steps.append("R")
+            facing = facing.rot_cw()
+        else:
+            break
+        n = 0
+        while scaffold.get(pos+facing) == '#':
+            n += 1
+            pos += facing
+        steps.append(str(n))
+    path = ','.join(steps)
+    
+    routines = []
+    for ch in "ABC":
+        steps = path.split(',')
+        replacements = set()
+        for i, step in enumerate(steps):
+            if step not in "RL":
                 continue
-            if not lst[j].isnumeric():
-                break
-            routine = ','.join(lst[i:j + 1])
-            if len(routine) > maxlen:
-                break
-            routines.add(routine)
-    return min(routines, key=lambda r: len(path.replace(r, char)))
+            for j, end in enumerate(steps[i+1:], i+1):
+                if end in "RL":
+                    continue
+                if not end.isdigit():
+                    break
+                repl = ','.join(steps[i:j+1])
+                if len(repl) > LIMIT:
+                    break
+                replacements.add(repl)
+        routine = min(replacements, key=lambda x: len(path.replace(x, ch)))
+        routines.append(routine)
+        path = path.replace(routine, ch)
+    
+    inp = [path, *routines, "n"]
+    inp = StringIO("\n".join(inp))
+    robot = VM(data)
+    robot.memory[0] = 2
+    print(next(robot.ascii(inp, StringIO())))
 
 
-routines = []
-for char in 'ABC':
-    r = simplify(path, char)
-    routines.append(r)
-    path = path.replace(r, char)
+if __name__ == "__main__":
+    from aocd import data
 
-lines = [path, *routines, 'n']
-i = StringIO('\n'.join(lines))
-robot = Intcode(data)
-robot[0] = 2
-print(robot.ascii(i, StringIO()))
+    assert isinstance(data, str)
+    solve(data)

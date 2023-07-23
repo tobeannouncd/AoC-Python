@@ -3,7 +3,7 @@ from utils import *
 
 def solve(data: str) -> None:
     a, instructions = data.split('\n\n')
-    dots = {Point(*to_ints(line)) for line in a.splitlines()}
+    dots = {Point(*ints(line)) for line in a.splitlines()}
     instructions = instructions.splitlines()
     fold_paper(dots, instructions[0])
     print(len(dots))

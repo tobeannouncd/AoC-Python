@@ -1,40 +1,25 @@
 from itertools import cycle, permutations
-
-from aocd import data
-
-from intcode import *
+from aoc2019.intcode import VM
 
 
-def run_once(phases):
-    amps = setup_amps(phases)
-    signal = 0
-    for a in amps:
-        a.write(signal)
-        signal, = a.read(1)
-    return signal
+def solve(data: str) -> None:
+    def amplify(*phases: int) -> int:
+        amps = (VM(data, phase) for phase in phases)
+        signal = 0
+        for amp in cycle(amps):
+            amp.send(signal)
+            x = next(amp, None)
+            if x is None:
+                return signal
+            signal = x
+        raise RuntimeError
+            
+    for rng in range(5), range(5, 10):
+        print(max(amplify(*p) for p in permutations(rng)))
+    
 
 
-def setup_amps(phases):
-    amps = []
-    for p in phases:
-        amp = Intcode(data)
-        amp.write(p)
-        amps.append(amp)
-    return amps
-
-
-def loop(phases) -> int:
-    amps = setup_amps(phases)
-    signal = 0
-    for i in cycle(range(len(amps))):
-        amp = amps[i]
-        amp.write(signal)
-        x = amp.read(1)
-        if not x:
-            break
-        signal, = x
-    return signal
-
-
-print(max(run_once(p) for p in permutations(range(5))))
-print(max(loop(p) for p in permutations(range(5, 10))))
+if __name__ == "__main__":
+    from aocd import data
+    assert isinstance(data, str)
+    solve(data)

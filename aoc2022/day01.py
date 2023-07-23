@@ -1,8 +1,8 @@
-from utils import split_paragraphs, to_ints
+from utils import paragraphs, ints
 
 
 def solve(data: str) -> None:
-    elves = list(map(to_ints, split_paragraphs(data)))
+    elves = map(ints, paragraphs(data))
     total_weight = sorted(map(sum, elves))
     print(total_weight[-1])
 
@@ -11,5 +11,5 @@ def solve(data: str) -> None:
 
 if __name__ == "__main__":
     from aocd import data
-
+    assert isinstance(data, str)
     solve(data)

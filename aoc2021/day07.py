@@ -7,7 +7,7 @@ def fuel(start, end):
 
 
 def solve(data: str) -> None:
-    crabs = sorted(to_ints(data))
+    crabs = sorted(ints(data))
     N = len(crabs)
     tgt = crabs[N // 2]
     print(sum(abs(crab - tgt) for crab in crabs))
