@@ -1,5 +1,4 @@
 from math import prod
-from utils import *
 
 OPS = {
     0: sum,
@@ -69,7 +68,7 @@ def parse_literal(b: str) -> tuple[int, str]:
     return int(out, 2), b
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     b = ''
     for ch in data:
         n = int(ch, 16)

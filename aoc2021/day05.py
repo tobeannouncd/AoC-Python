@@ -1,19 +1,14 @@
 from collections import Counter
-from utils import *
+
+from lattice import Point
+from math_extra import sign
+from parsing import integers
 
 
-def sign(x):
-    if x < 0:
-        return -1
-    if x > 0:
-        return 1
-    return 0
-
-
-def solve(data: str) -> None:
+def solve(data) -> None:
     lines = []
     for line in data.splitlines():
-        x, y, X, Y = ints(line)
+        x, y, X, Y = integers(line)
         a = Point(x, y)
         b = Point(X, Y)
         lines.append((a, b))
@@ -37,8 +32,9 @@ def draw_lines(lines, grid):
 
 def main():
     from aocd import data
+
     solve(data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

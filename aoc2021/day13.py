@@ -1,9 +1,12 @@
-from utils import *
 
 
-def solve(data: str) -> None:
+from lattice import Point, to_str
+from parsing import integers
+
+
+def solve(data) -> None:
     a, instructions = data.split('\n\n')
-    dots = {Point(*ints(line)) for line in a.splitlines()}
+    dots = {Point(*integers(line)) for line in a.splitlines()}
     instructions = instructions.splitlines()
     fold_paper(dots, instructions[0])
     print(len(dots))
@@ -11,7 +14,7 @@ def solve(data: str) -> None:
     for inst in instructions[1:]:
         fold_paper(dots,inst)
     grid = {d:'#' for d in dots}
-    print(grid_string(grid))
+    print(to_str(grid))
 
 def fold_paper(dots, instruction):
     match instruction.split()[-1].split('='):

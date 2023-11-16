@@ -1,7 +1,6 @@
-from utils import *
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     pos, depth = 0, 0
     for line in data.splitlines():
         match line.split():

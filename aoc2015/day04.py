@@ -1,4 +1,3 @@
-from utils import *
 from hashlib import md5
 from itertools import count
 
@@ -11,7 +10,7 @@ def find_password(secret_key: str, leading_zeros: int) -> int:
     return -1
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     print(find_password(data.strip(), 5))
     print(find_password(data.strip(), 6))
 

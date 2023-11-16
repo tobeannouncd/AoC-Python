@@ -1,15 +1,18 @@
-from utils import *
+from lattice import Point
+
 
 DIRS = {
-    '<': Point(-1, 0),
-    '>': Point(1, 0),
-    'v': Point(0, 1),
-    '^': Point(0, -1),
+    "<": Point(-1, 0),
+    ">": Point(1, 0),
+    "v": Point(0, 1),
+    "^": Point(0, -1),
 }
+
 
 def solve(data: str) -> None:
     print(part_one(data))
     print(part_two(data))
+
 
 def part_one(data):
     santa = Point(0, 0)
@@ -19,6 +22,7 @@ def part_one(data):
         santa += d
         houses.add(santa)
     return len(houses)
+
 
 def part_two(data):
     santa = Point(0, 0)
@@ -37,8 +41,10 @@ def part_two(data):
 
 def main():
     from aocd import data
+
+    assert isinstance(data, str)
     solve(data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

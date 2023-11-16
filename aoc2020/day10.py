@@ -1,8 +1,8 @@
 from collections import Counter
-from utils import ints
+from parsing import integers
 
-def solve(data: str) -> None:
-    adapters = sorted(ints(data))
+def solve(data) -> None:
+    adapters = sorted(integers(data))
     gaps = Counter()
     for a,b in zip([0]+adapters, adapters + [adapters[-1]+3]):
         gaps[b-a] += 1

@@ -1,10 +1,8 @@
 from collections import defaultdict
-from curses.ascii import islower
 from functools import cache
-from utils import *
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     connections: defaultdict[str, set[str]] = defaultdict(set)
     for line in data.splitlines():
         a, b = line.split('-')

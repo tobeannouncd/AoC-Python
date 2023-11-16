@@ -1,6 +1,5 @@
 from collections import deque
-from utils import ints
-
+from parsing import integers
 
 def twosum(nums, target):
     seen = set()
@@ -11,8 +10,8 @@ def twosum(nums, target):
     return False
 
 
-def solve(data: str) -> None:
-    nums = ints(data)
+def solve(data) -> None:
+    nums = integers(data)
     window = deque(nums[:25], maxlen=25)
     target = -1
     for n in nums[25:]:

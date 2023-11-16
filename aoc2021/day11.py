@@ -1,48 +1,49 @@
-from typing import MutableMapping
+from itertools import count
 
-from utils import *
+import numpy as np
 
 
-def simulate(grid: MutableMapping[Point, int]) -> int:
+@np.vectorize
+def reset(x):
+    return x if x < 10 else 0
+
+
+def simulate(octopi: np.ndarray):
+    R, C = octopi.shape
+    octopi += 1
     flashed = set()
-    for k in grid:
-        grid[k] += 1
     while True:
-        flashes = 0
-        for k, v in grid.items():
-            if v > 9 and k not in flashed:
-                flashed.add(k)
-                flashes += 1
-                for a in adjacent(k, 8):
-                    if a in grid:
-                        grid[a] += 1
-        if not flashes:
+        changed = False
+        for i, j in np.argwhere(octopi >= 10):
+            if (i, j) in flashed:
+                continue
+            changed = True
+            flashed.add((i, j))
+            s = slice(max(0, i - 1), min(R, i + 2)), slice(max(0, j - 1), min(C, j + 2))
+            octopi[s] += 1
+        if not changed:
             break
-    for k in flashed:
-        grid[k] = 0
-    return len(flashed)
+    octopi[:] = reset(octopi)
 
 
 def solve(data: str) -> None:
-    grid = to_grid(data, int)
-    steps = 100
+    octopi = np.array([[int(x) for x in line] for line in data.splitlines()])
+
     flashes = 0
-    for _ in range(steps):
-        flashes += simulate(grid)
+    for _ in range(100):
+        simulate(octopi)
+        flashes += np.count_nonzero(octopi == 0)
     print(flashes)
 
-    while True:
-        steps += 1
-        s = simulate(grid)
-        if s == len(grid):
-            print(steps)
+    for t in count(101):
+        simulate(octopi)
+        if not np.count_nonzero(octopi):
+            print(t)
             break
 
 
-def main():
+if __name__ == "__main__":
     from aocd import data
+
+    assert isinstance(data, str)
     solve(data)
-
-
-if __name__ == '__main__':
-    main()

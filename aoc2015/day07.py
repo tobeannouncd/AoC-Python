@@ -1,8 +1,7 @@
 from functools import cache
-from utils import *
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     connections: dict[str, str] = {}
     for line in data.splitlines():
         inp, wire = line.split(' -> ')

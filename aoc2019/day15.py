@@ -1,56 +1,48 @@
 from collections import deque
 from copy import deepcopy
+
 from aoc2019.intcode import VM
 from lattice import Point
 
-
-COMMANDS = dict(zip((3, 1, 2, 4), Point(0, 0).adjacent()))
-START = Point(0, 0)
-
-
-def solve(data: str):
-    ship_map = make_map(data)
-    oxygen = next(pt for pt, val in ship_map.items() if val == 2)
-
-    dist = flood(ship_map, START, oxygen)
-    print(dist[oxygen])
-
-    dist = flood(ship_map, oxygen)
-    print(max(dist.values()))
+MOVES = {
+    1: Point(0, -1),
+    2: Point(0, 1),
+    3: Point(-1, 0),
+    4: Point(1, 0),
+}
 
 
-def make_map(data: str) -> dict[Point, int]:
-    grid = {}
-    todo = [(START, VM(data))]
+def solve(data: str) -> None:
+    scan = make_map(data)
+    goal = next(pt for pt, s in scan.items() if s == 2)
+
+    print(flood(scan, Point(0, 0))[goal])
+    print(max(flood(scan, goal).values()))
+
+
+def make_map(data):
+    scan = {}
+    todo = [(VM(data), Point(0, 0))]
     while todo:
-        pos, droid = todo.pop()
-        for n, offset in COMMANDS.items():
-            pos_ = pos + offset
-            if pos_ in grid:
+        bot, pos = todo.pop()
+        for cmd, x in MOVES.items():
+            if (nxt := pos + x) in scan:
                 continue
-            droid_ = deepcopy(droid)
-            droid_.send(n)
-            if (status := next(droid_)) is None:
-                raise RuntimeError
-            grid[pos_] = status
+            scan[nxt] = status = (b := deepcopy(bot).send(cmd)).get(1)
             if status:
-                todo.append((pos_, droid_))
-    return grid
+                todo.append((b, nxt))
+    return scan
 
 
-def flood(
-    ship_map: dict[Point, int], start: Point, end: Point | None = None
-) -> dict[Point, int]:
+def flood(scan, start):
     dist = {start: 0}
     todo = deque([start])
     while todo:
         pos = todo.popleft()
-        if pos == end:
-            break
-        for a in pos.adjacent():
-            if ship_map.get(a) and a not in dist:
-                dist[a] = dist[pos] + 1
-                todo.append(a)
+        for nxt in pos.adjacent():
+            if nxt not in dist and scan.get(nxt):
+                dist[nxt] = dist[pos] + 1
+                todo.append(nxt)
     return dist
 
 

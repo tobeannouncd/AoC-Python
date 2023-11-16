@@ -1,70 +1,80 @@
 from io import StringIO
-from aoc2019.intcode import VM
-from lattice import from_str, Point
+from string import ascii_uppercase
 
-DIRS = dict(zip("<^v>", Point(0, 0).adjacent()))
-LIMIT = 20
+from aoc2019.intcode import VM
+from lattice import Point, from_str
+
+DIRS = {
+    'v': Point(0, 1),
+    '<': Point(-1, 0),
+    '>': Point(1, 0),
+    '^': Point(0, -1)
+}
 
 def solve(data: str) -> None:
-    robot = VM(data)
-    out = StringIO()
-    next(robot.ascii(StringIO(), out), None)
-
-    scaffold = dict(from_str(out.getvalue()))
-    print(
-        sum(
-            pt.x * pt.y
-            for pt, val in scaffold.items()
-            if val == "#" and all(scaffold.get(a) == "#" for a in pt.adjacent(4))
-        )
-    )
+    pc = VM(data)
     
-    pos, facing = next((pt, DIRS[val]) for pt, val in scaffold.items() if val in DIRS)
+    o = StringIO()
+    next(pc.ascii(out=o), None)
+
+    scaffold = set()
+    pos, facing = None, None
+    for pt, val in from_str(o.getvalue()):
+        if val == '#':
+            scaffold.add(pt)
+        elif (x := DIRS.get(val)):
+            pos = pt
+            facing = x
+    assert pos and facing
+    
+    intersections = (x for x in scaffold if all(a in scaffold for a in x.adjacent()))
+    print(sum(x*y for x,y in intersections))
+
     steps = []
     while True:
-        if scaffold.get(pos + facing.rot_ccw()) == '#':
+        if facing.rot_ccw() + pos in scaffold:
             steps.append("L")
             facing = facing.rot_ccw()
-        elif scaffold.get(pos + facing.rot_cw()) == '#':
+        elif facing.rot_cw() + pos in scaffold:
             steps.append("R")
             facing = facing.rot_cw()
         else:
             break
         n = 0
-        while scaffold.get(pos+facing) == '#':
+        while facing + pos in scaffold:
             n += 1
             pos += facing
         steps.append(str(n))
     path = ','.join(steps)
     
     routines = []
-    for ch in "ABC":
+    for char in "ABC":
         steps = path.split(',')
-        replacements = set()
-        for i, step in enumerate(steps):
-            if step not in "RL":
+        subs = set()
+        for i, x in enumerate(steps[:-1]):
+            if x not in "LR":
                 continue
-            for j, end in enumerate(steps[i+1:], i+1):
-                if end in "RL":
+            for j, y in enumerate(steps[i+1:], i+1):
+                if y in "ABC":
+                    break
+                elif y in "LR":
                     continue
-                if not end.isdigit():
+                s = ','.join(steps[i:j+1])
+                if len(s) > 20:
                     break
-                repl = ','.join(steps[i:j+1])
-                if len(repl) > LIMIT:
-                    break
-                replacements.add(repl)
-        routine = min(replacements, key=lambda x: len(path.replace(x, ch)))
-        routines.append(routine)
-        path = path.replace(routine, ch)
+                subs.add(s)
+        routines.append(s := min(subs, key=lambda x: len(path.replace(x, char))))
+        path = path.replace(s, char)
     
-    inp = [path, *routines, "n"]
-    inp = StringIO("\n".join(inp))
-    robot = VM(data)
-    robot.memory[0] = 2
-    print(next(robot.ascii(inp, StringIO())))
+    inp = StringIO('\n'.join((path, *routines, 'n')))
+    pc.reset()
+    pc[0] = 2
+    print(next(pc.ascii(inp)))
+        
 
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     from aocd import data
 
     assert isinstance(data, str)

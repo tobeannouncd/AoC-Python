@@ -1,13 +1,13 @@
 from math import prod
-from utils import *
+from lattice import from_str
 
 
-def solve(data: str) -> None:
-    grid = {k: int(v) for k, v in to_grid(data).items()}
+def solve(data) -> None:
+    grid = {k: int(v) for k, v in from_str(data)}
     low_points = {
         k
         for k, v in grid.items()
-        if all(v < grid.get(a, 9) for a in adjacent(k))
+        if all(v < grid.get(a, 9) for a in k.adjacent())
     }
     print(sum(grid[p] + 1 for p in low_points))
 
@@ -19,7 +19,7 @@ def solve(data: str) -> None:
             p = stack.pop()
             visited.add(p)
             stack.extend(
-                a for a in adjacent(p)
+                a for a in p.adjacent()
                 if a not in visited.union(stack) and grid.get(a, 9) < 9)
         basins.append(len(visited))
     basins.sort()

@@ -1,4 +1,3 @@
-from utils import *
 import re
 
 def nice(s: str) -> bool:
@@ -18,7 +17,7 @@ def nice2(s: str) -> bool:
     except AssertionError:
         return False
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     strings = data.splitlines()
     print(sum(1 for s in strings if nice(s)))
     print(sum(1 for s in strings if nice2(s)))

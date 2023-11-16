@@ -1,15 +1,17 @@
-from heapq import heappop, heappush
+from heapq import heapify, heappop, heappush
 from itertools import product
-from utils import *
+
+from lattice import from_str, Point
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     best_risk(data, 1)
     best_risk(data, 5)
 
 
 def best_risk(data, n):
-    grid = to_grid(data, int)
+    # grid = to_grid(data, int)
+    grid = {pt:int(val) for pt,val in from_str(data)}
     rows, cols = (x+1 for x in max(grid))
     for pt, val in grid.copy().items():
         for r, c in product(range(n), repeat=2):
@@ -22,7 +24,8 @@ def best_risk(data, n):
             grid[pt_] = val_
     visited = set()
     m = max(grid)
-    pq = [(0, Point(0, 0))]
+    pq = []
+    heappush(pq, (0, Point(0, 0)))
     while pq:
         risk, pt = heappop(pq)
         if pt in visited:
@@ -31,7 +34,8 @@ def best_risk(data, n):
         if pt == m:
             print(risk)
             break
-        for a in adjacent(pt):
+        # for a in adjacent(pt):
+        for a in pt.adjacent():
             if a in grid and a not in visited:
                 heappush(pq, (risk + grid[a], a))
 

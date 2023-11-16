@@ -1,9 +1,10 @@
 from collections import Counter
-from utils import *
+
+from parsing import integers
 
 
-def solve(data: str) -> None:
-    lanternfish = Counter(ints(data))
+def solve(data) -> None:
+    lanternfish = Counter(integers(data))
     simulate(lanternfish, 80)
     print(sum(lanternfish.values()))
     simulate(lanternfish, 256 - 80)

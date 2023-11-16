@@ -2,7 +2,6 @@ from functools import reduce
 from itertools import permutations
 import json
 import math
-from utils import *
 
 
 def explode(x, n=4):
@@ -63,7 +62,7 @@ def magnitude(x):
         return x
     return 3*magnitude(x[0]) + 2*magnitude(x[1])
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     nums = [json.loads(line) for line in data.splitlines()]
     print(magnitude(reduce(add, nums)))
     print(max(magnitude(add(a,b)) for a,b in permutations(nums,2)))

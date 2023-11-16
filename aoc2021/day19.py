@@ -1,100 +1,85 @@
-from functools import cache, partial
 from itertools import combinations, permutations, product
-from typing import Iterator
-from utils import *
 
-P = list[int] | tuple[int, int, int]
+import numpy as np
 
+from parsing import integers
 
-def orientations(s: set[P]) -> Iterator[set[P]]:
-    for o in transform_matrices():
-        yield set(map(partial(rotate_point, o), s))
-
-
-def rotate_point(transformation_mat: tuple[P, P, P], pt: P) -> P:
-    out = []
-    for row in transformation_mat:
-        out.append(sum(a * b for a, b in zip(row, pt)))
-    return tuple(out)
-
-
-def transform_matrices() -> Iterator[tuple[P, P, P]]:
+ROTS = []
+for x, y in product((1,-1), repeat=2):
     for i, j in permutations(range(3), 2):
-        for m, n in product((-1, 1), repeat=2):
-            a = [0, 0, 0]
-            a[i] = m
-            b = [0, 0, 0]
-            b[j] = n
-            c = cross(a, b)
-            yield a, b, c
+        a, b = [0]*3, [0]*3
+        a[i], b[j] = x, y
+        ROTS.append(np.array([a, b, np.cross(a, b)]))
+
+def invar(a, b) -> tuple[int,...]:
+    return tuple(sorted(abs(aa-bb) for aa,bb in zip(a, b)))
+
+def disp(a, b) -> tuple[int,...]:
+    x = tuple(aa-bb for aa,bb in zip(a, b))
+    y = tuple(bb-aa for aa,bb in zip(a, b))
+    return max(x, y)
+
+def manhattan(a, b):
+    return sum(abs(aa-bb) for aa,bb in zip(a, b))
 
 
-def cross(a: P, b: P) -> list[int]:
-    return [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ]
+def solve(data: str) -> None:
+    scanners = {}
+    invars = {}
+    for p in data.split("\n\n"):
+        header, *rem = p.splitlines()
+        n = int(header.split()[2])
+        scanners[n] = np.array([integers(x) for x in rem])
+        invars[n] = set()
+        for a, b in combinations(scanners[n], 2):
+            invars[n].add(invar(a, b))
 
-
-def alignments(fixed: set[P], moveable: set[P]) -> Iterator[set[P]]:
-    for o in orientations(moveable):
-        for f, m in product(fixed, o):
-            yield {move_point(pt, f, m) for pt in o}
-
-
-def move_point(pt: P, end: P, start: P) -> P:
-    diff = [e - s for e, s in zip(end, start)]
-    return tuple(p + d for p, d in zip(pt, diff))
-
-
-def invariant(a: P, b: P) -> P:
-    return tuple(sorted(abs(aa - bb) for aa, bb in zip(a, b)))
-
-
-def set_invariants(s: set[P]) -> set[P]:
-    out = set()
-    for a, b in combinations(s, 2):
-        out.add(invariant(a, b))
-    return out
-
-
-def solve(data: str):
-    visible: dict[int, set[P]] = {}
-    for i, group in enumerate(data.split('\n\n')):
-        visible[i] = set()
-        for line in group.splitlines()[1:]:
-            pt = tuple(map(int, line.split(',')))
-            visible[i].add(pt)
-    aligned = {0: visible[0]}
-    invars = {i: set_invariants(visible[i]) for i in visible}
-
-    @cache
-    def score(pair: tuple[int, int]):
-        a, b = pair
-        return len(invars[a].intersection(invars[b]))
-
-    unaligned = set(visible).difference(aligned)
+    aligned = {next(k for k in scanners)}
+    unaligned = set(scanners) - aligned
+    offsets = {a:np.zeros(3, int) for a in aligned}
     while unaligned:
-        a, u = max(product(aligned, unaligned), key=score)
-        for alignment in alignments(aligned[a], visible[u]):
-            common = alignment & aligned[a]
-            if len(common) >= 12:
-                aligned[u] = alignment
+        a, u = next((a,u) for a,u in product(aligned, unaligned) if len(invars[a] & invars[u]) >= 66)
+        tgt = {disp(x,y) for x,y in combinations(scanners[a], 2)}
+        rot = None
+        for r in ROTS:
+            m = scanners[u] @ r
+            cur = {disp(x,y) for x,y in combinations(m, 2)}
+            if len(cur & tgt) >= 66:
+                rot = m
                 break
-        unaligned.remove(u)
+        else:
+            raise Exception('no valid rotations')
 
-    print(len(set.union(*aligned.values())))
-    print(
-        max(
-            manhattan(a, b)
-            for a, b in combinations(set.union(*aligned.values()), 2)))
+        tgt = {tuple(x) for x in scanners[a]}
+        for fixed, moving in product(scanners[a], rot):
+            offset = fixed - moving
+            m = rot + offset
+            cur = {tuple(x) for x in m}
+            if len(tgt & cur) >= 12:
+                scanners[u] = m
+                offsets[u] = offset
+                aligned.add(u)
+                unaligned.remove(u)
+                break
+        else:
+            raise Exception('could not align')
+    
+    pts = set()
+    for s in scanners.values():
+        pts.update(map(tuple, s))
+    print(len(pts))
+
+    print(max(
+        manhattan(a, b)
+        for a, b in combinations(offsets.values(), 2)
+    ))
 
 
-def manhattan(a: P, b: P) -> int:
-    return sum(abs(aa - bb) for aa, bb in zip(a, b))
+
 
 
 if __name__ == '__main__':
     from aocd import data
+
+    assert isinstance(data, str)
     solve(data)

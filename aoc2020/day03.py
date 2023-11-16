@@ -1,10 +1,10 @@
 from math import prod
-from utils import Point, to_grid
+from lattice import Point, from_str
 
 
-def count_trees(hill, slope: Point) -> int:
+def count_trees(hill: dict[Point,str], slope: Point) -> int:
     x_max = max(p.x for p in hill)
-    dx = Point(-x_max - 1, 0)
+    dx = Point(-1 - x_max, 0)
     pos = Point(0, 0)
     ans = 0
     while pos in hill:
@@ -15,8 +15,8 @@ def count_trees(hill, slope: Point) -> int:
     return ans
 
 
-def solve(data: str) -> None:
-    hill = to_grid(data)
+def solve(data) -> None:
+    hill = dict(from_str(data.rstrip()))
     print(count_trees(hill, Point(3, 1)))
     print(
         prod(

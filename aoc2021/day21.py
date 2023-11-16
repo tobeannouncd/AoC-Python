@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from functools import cache
 from itertools import count, cycle, product
 
-from utils import *
+from parsing import integers
+
 
 
 def sim(a, b, max_score=1000):
@@ -44,8 +45,8 @@ def wins_losses(pos_cur, pos_other, score_cur, score_other):
     return wins, losses
 
 
-def solve(data: str) -> None:
-    _, a, _, b = ints(data)
+def solve(data) -> None:
+    _, a, _, b = integers(data)
     rolls, scores = sim(a, b)
     print(rolls*min(scores))
 

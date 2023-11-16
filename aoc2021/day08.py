@@ -1,6 +1,5 @@
 from itertools import permutations
 from typing import Collection
-from utils import *
 """
   0:      1:      2:      3:      4:
  aaaa    ....    aaaa    aaaa    ....
@@ -43,7 +42,7 @@ def decode(digits: Collection[str]):
             return tbl
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     ans = 0
     for line in data.splitlines():
         _, o = line.split(' | ')

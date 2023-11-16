@@ -1,47 +1,41 @@
-from itertools import product
-from typing import Iterator, Mapping
-from utils import *
-
-
-def window(p: Point) -> Iterator[Point]:
-    for y in range(p.y - 1, p.y + 2):
-        for x in range(p.x - 1, p.x + 2):
-            yield Point(x, y)
-
-
-TBL = str.maketrans('#.', '10')
+import numpy as np
 
 
 def solve(data: str) -> None:
-    algorithm, data = data.split('\n\n')
-    image = '.', to_grid(data)
-    for _ in range(2):
-        image = enhance(algorithm, image)
-    print(sum(1 for v in image[1].values() if v == '#'))
+    alg, img = data.strip().split("\n\n")
+    
+    def window(arr: np.ndarray, fill: str) -> np.ndarray:
+        rows, cols = arr.shape
+        p = np.pad(arr, 2, constant_values=fill)
+        return np.lib.stride_tricks.sliding_window_view(
+            p, (3,3)
+        ).reshape(rows+2, cols+2, 9)
+    
+    def _enhance(arr: np.ndarray) -> str:
+        i = 0
+        for x in arr:
+            i = (i << 1) + int(x == '#')
+        return alg[i]
+    
+    def enhance(arr: np.ndarray, fill: str) -> np.ndarray:
+        return np.apply_along_axis(_enhance, -1, window(arr, fill))
+    
+    img = np.array([list(x) for x in img.splitlines()])
+    fill = '.'
+    for n in 2, 48:
+        for _ in range(n):
+            img = enhance(img, fill)
+            if fill == '.' and alg[0] == '#':
+                fill = '#'
+            elif fill == '#' and alg[-1] == '.':
+                fill = '.'
+        print(np.count_nonzero(img == '#'))
+    
 
-    for _ in range(48):
-        image = enhance(algorithm, image)
-    print(sum(1 for v in image[1].values() if v == '#'))
-
-
-def enhance(algorithm: str, image: tuple[str, Mapping[Point, str]]):
-    default, grid = image
-    p_min, p_max = min(grid), max(grid)
-    out = {}
-    for x, y in product(range(p_min.x - 1, p_max.x + 2),
-                        range(p_min.y - 1, p_max.y + 2)):
-        p = Point(x, y)
-        s = ''.join(grid.get(w, default) for w in window(p))
-        i = int(s.translate(TBL), 2)
-        out[p] = algorithm[i]
-    d = '#' if default == '.' else '.'
-    return d, out
-
-
-def main():
-    from aocd import data
-    solve(data)
 
 
 if __name__ == '__main__':
-    main()
+    from aocd import data
+
+    assert isinstance(data, str)
+    solve(data)

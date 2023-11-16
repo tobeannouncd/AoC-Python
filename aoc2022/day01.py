@@ -1,12 +1,10 @@
-from utils import paragraphs, ints
+from heapq import nlargest
 
 
-def solve(data: str) -> None:
-    elves = map(ints, paragraphs(data))
-    total_weight = sorted(map(sum, elves))
-    print(total_weight[-1])
-
-    print(sum(total_weight[-3:]))
+def solve(data: str):
+    elves = [sum(int(x) for x in p.splitlines()) for p in data.split("\n\n")]
+    for x in 1, 3:
+        print(sum(nlargest(x, elves)))
 
 
 if __name__ == "__main__":

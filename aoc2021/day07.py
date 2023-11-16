@@ -1,4 +1,6 @@
-from utils import *
+
+
+from parsing import integers
 
 
 def fuel(start, end):
@@ -6,8 +8,8 @@ def fuel(start, end):
     return d * (d + 1) // 2
 
 
-def solve(data: str) -> None:
-    crabs = sorted(ints(data))
+def solve(data) -> None:
+    crabs = sorted(integers(data))
     N = len(crabs)
     tgt = crabs[N // 2]
     print(sum(abs(crab - tgt) for crab in crabs))

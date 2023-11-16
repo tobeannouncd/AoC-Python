@@ -1,4 +1,3 @@
-from utils import *
 
 
 def get_digit(nums, i, func):
@@ -16,7 +15,7 @@ def get_rating(nums, func):
 
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     rows = data.splitlines()
     N = len(rows[0])
     gamma = ''.join(get_digit(rows,i, max) for i in range(N))

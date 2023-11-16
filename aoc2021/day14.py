@@ -1,9 +1,8 @@
 from collections import Counter
 
-from utils import *
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     template, data = data.split('\n\n')
     rules = {}
     for line in data.splitlines():

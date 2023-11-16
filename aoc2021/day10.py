@@ -1,5 +1,4 @@
 from typing import Optional
-from utils import *
 
 PAIRS = {
     '(': ')',
@@ -35,7 +34,7 @@ def judge(line: str) -> int | str:
     return completion_str
 
 
-def solve(data: str) -> None:
+def solve(data) -> None:
     incomplete = []
     syntax_score = 0
     for line in data.splitlines():

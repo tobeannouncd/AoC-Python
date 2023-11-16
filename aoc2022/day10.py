@@ -1,5 +1,5 @@
 from io import StringIO
-from crt import CRT, Instruction
+from crt import CRT
 
 class MyCRT(CRT):
     def __init__(self, *args, **kwargs) -> None:

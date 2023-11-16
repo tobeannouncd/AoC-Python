@@ -1,9 +1,11 @@
 from itertools import product
-from utils import *
+
+from parsing import integers
+from lattice import Point
 
 
-def solve(data: str) -> None:
-    xmin, xmax, ymin, ymax = ints(data)
+def solve(data) -> None:
+    xmin, xmax, ymin, ymax = integers(data)
     vx_min = 1
     while vx_min * (vx_min + 1) // 2 < xmin:
         vx_min += 1

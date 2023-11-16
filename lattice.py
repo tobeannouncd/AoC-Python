@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from itertools import product
 from typing import Iterable, Iterator, Literal, Self
+from math_extra import sign
 
 
 @dataclass(frozen=True, order=True, slots=True)
@@ -20,7 +21,7 @@ class Point:
 
     def __mul__(self, other: int) -> Self:
         if isinstance(other, int):
-            return self.__class__(self.x * other, self.y * other)
+            return self.__class__(self.x * other, self.y * other) 
         return NotImplemented
 
     def __rmul__(self, other: int) -> Self:
@@ -45,7 +46,7 @@ class Point:
         yield self.y
 
     def sign(self) -> Self:
-        return self.__class__(_sign(self.x), _sign(self.y))
+        return self.__class__(sign(self.x), sign(self.y))
 
     def __str__(self) -> str:
         return f"({self.x},{self.y})"
@@ -56,8 +57,6 @@ class Point:
                 yield self.__class__(self.x + dx, self.y + dy)
 
 
-def _sign(n: int) -> int:
-    return n // abs(n) if n else n
 
 
 def from_str(string: str) -> Iterator[tuple[Point, str]]:

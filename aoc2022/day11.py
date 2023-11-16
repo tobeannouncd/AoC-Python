@@ -1,15 +1,17 @@
 from math import lcm
-from utils import ints, paragraphs
+import math
+
+from parsing import integers
 
 class Monkey:
     def __init__(self, s: str):
         monkey, starting_items, operation, test, true_op, false_op = s.splitlines()
-        self.id, = ints(monkey)
-        self.items = ints(starting_items)
+        self.id, = integers(monkey)
+        self.items = integers(starting_items)
         self.operation = operation.split('= ')[1]
-        self.div, = ints(test)
-        self.true_target, = ints(true_op)
-        self.false_target, = ints(false_op)
+        self.div, = integers(test)
+        self.true_target, = integers(true_op)
+        self.false_target, = integers(false_op)
         self.inspected = 0
     
     def round(self, relieved, mod):
@@ -35,7 +37,7 @@ def solve(data: str) -> None:
 
 def run(data, rounds, relieved):
     monkeys = []
-    for p in paragraphs(data):
+    for p in data.split("\n\n"):
         m = Monkey(p)
         monkeys.append(m)
     mod = 1
@@ -45,14 +47,14 @@ def run(data, rounds, relieved):
         for m in monkeys:
             for target, val in m.round(relieved, mod):
                 monkeys[target].items.append(val)
-    s = sorted(m.inspected for m in monkeys)
-    print(s[-2]*s[-1])
+    s: list[int] = sorted(m.inspected for m in monkeys)
+    print(math.prod(s[-2:]))
     
 
 
 if __name__ == "__main__":
     from aocd import data
-
+    assert isinstance(data, str)
     solve(data)
     sample = """Monkey 0:
   Starting items: 79, 98
